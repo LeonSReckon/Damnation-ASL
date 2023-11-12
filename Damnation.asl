@@ -1,4 +1,4 @@
-// Damnation AutoSplitter/Load-Remover Version 1.0.0 09/14/2023
+// Damnation AutoSplitter/Load-Remover Version 1.1.0 09/14/2023
 // Supports LRT/RTA
 // Supports All Difficulties
 // Supports SinglePlayer && MultiPlayer!
@@ -21,7 +21,23 @@ startup
     vars.cutscenes_count  = 0;
     vars.crash            = 0;
 	vars.lvlsplit         = new List<byte>();
+	vars.act          = new List<byte>()
+	{1,4,8,10,13};
     vars.timer_model      = new TimerModel{ CurrentState = timer };
+	
+    // Splits
+	settings.Add("Split Type", true, "Split Type");
+	settings.CurrentDefaultParent = "Split Type";
+	settings.Add("ACTS Split", true, "ACTS Split");
+	settings.Add("Sub-ACTS Split", true, "Sub-ACTS Split");
+	//settings.Add("All Collectibles", false, "All Collectibles");
+	settings.CurrentDefaultParent = null;
+
+    // Tool Tips
+    settings.SetToolTip("Split Type", "Where do you want to split");
+	settings.SetToolTip("ACTS Split", "Requires 6 Splits for each ACT");
+	settings.SetToolTip("Sub-ACTS Split", "Requires 16 Splits for each level in each ACT but doesn't split on ACTS");
+	//settings.SetToolTip("All COG Tags", "Requires 33 Splits for each Cog Tag Collected");
 
     // actions
     Action reset_vars = () => {
@@ -51,21 +67,36 @@ split
 	// Final Split
     if(current.lvl == 16)
     {
-    // update cutscenes_count
-    if(current.Cut == 1 && old.Cut == 0) vars.cutscenes_count++;
+        // update cutscenes_count
+        if(current.Cut == 1 && old.Cut == 0) vars.cutscenes_count++;
 		
-	// reset cutscenes_count
-    if(current.lvl == 16 && old.lvl != 16) vars.cutscenes_count = 0;
+	    // reset cutscenes_count
+        if(current.lvl == 16 && old.lvl != 16) vars.cutscenes_count = 0;
 
-    // final split
-    if(vars.cutscenes_count == 2) { vars.reset_vars(); return true; }
+        // final split
+        if(vars.cutscenes_count == 2) { vars.reset_vars(); return true; }
 	}
 
 	// Level Split
 	return current.lvl > old.lvl && current.lvl < 18 && !vars.lvlsplit.Contains(current.lvl);
 	{
-	vars.lvlsplit.Add(current.lvl);
-	return true;
+	    vars.lvlsplit.Add(current.lvl);
+	    return true;
+	}
+
+	if(settings ["ACTS Split"]){
+		if(current.lvl > old.lvl && vars.act.Contains(current.lvl)){
+		return true;
+		}
+	}
+
+	if(settings ["Sub-ACTS Split"]){
+    	if(current.lvl > old.lvl && !vars.act.Contains(current.lvl)){
+			{
+				vars.act.Add(current.lvl); 
+				return true;
+			}
+		}
 	}
 
 }
